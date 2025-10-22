@@ -254,5 +254,9 @@ def generate():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    # Get port from environment variable, default to 10000 (Render's default)
+    port = int(os.environ.get('PORT', 10000))
+    # Run the app, binding to 0.0.0.0 (required for Render)
+    # and disabling debug mode for production.
+    app.run(debug=False, host='0.0.0.0', port=port)
 
