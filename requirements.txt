@@ -6,3 +6,4 @@ tqdm
 protobuf
 pydantic
 pypdf
+docx
