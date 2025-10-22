@@ -41,12 +41,13 @@ try:
     for m_name in available_model_names:
         print("-", m_name)
 
-    # Define the order of preference for models
+    # --- FIX 1: Updated list to match models available in your log ---
     preferred_models = [
-        'models/gemini-1.5-flash',       # Try 1.5-flash first
-        'models/gemini-pro',             # Fallback to 1.0-pro
-        # Add any other compatible models here if needed
+        'models/gemini-2.5-flash',       # This is in your log
+        'models/gemini-pro-latest',      # This is in your log
+        'models/gemini-pro',             # Fallback just in case
     ]
+    # --- END FIX 1 ---
     
     # Find the first available model from our preferred list
     selected_model_name = None
@@ -57,8 +58,14 @@ try:
             
     # Check if we found a model
     if not selected_model_name:
-        # --- FIX: Iterate over all_models (objects), not available_model_names (strings) ---
-        fallback_models = [m for m in all_models if 'generateContent' in m.supported_generation_methods and 'text' in m.input_token_limit]
+        # --- FIX 2: Corrected the fallback logic ---
+        fallback_models = [
+            m for m in all_models 
+            if 'generateContent' in m.supported_generation_methods 
+            and m.input_token_limit and m.input_token_limit > 0 # Check if it's a non-zero int
+        ]
+        # --- END FIX 2 ---
+        
         if fallback_models:
             selected_model_name = fallback_models[0].name # Get the .name from the model object
             print(f"⚠️ Could not find preferred models. Using first available compatible model: {selected_model_name}")
@@ -69,7 +76,6 @@ try:
 
     model = genai.GenerativeModel(selected_model_name)
     analysis_model = genai.GenerativeModel(selected_model_name)
-    # --- END FIX ---
     
 except Exception as e:
     print(f"FATAL: Could not initialize Gemini model: {e}")
