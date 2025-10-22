@@ -32,10 +32,14 @@ except KeyError:
 model = None
 analysis_model = None
 try:
-    available_models = [m.name for m in genai.list_models()]
+    # --- FIX: Get the full list of model OBJECTS first ---
+    all_models = list(genai.list_models())
+    available_model_names = [m.name for m in all_models] # Get just the names for checking
+    # --- END FIX ---
+
     print("\nAvailable models for this key:")
-    for m in available_models:
-        print("-", m)
+    for m_name in available_model_names:
+        print("-", m_name)
 
     # Define the order of preference for models
     preferred_models = [
@@ -45,26 +49,27 @@ try:
     ]
     
     # Find the first available model from our preferred list
-    selected_model = None
+    selected_model_name = None
     for m_name in preferred_models:
-        if m_name in available_models:
-            selected_model = m_name
+        if m_name in available_model_names:
+            selected_model_name = m_name
             break
             
     # Check if we found a model
-    if not selected_model:
-        # This is a more robust check for any text-generation model
-        fallback_models = [m for m in available_models if 'generateContent' in m.supported_generation_methods and 'text' in m.input_token_limit]
+    if not selected_model_name:
+        # --- FIX: Iterate over all_models (objects), not available_model_names (strings) ---
+        fallback_models = [m for m in all_models if 'generateContent' in m.supported_generation_methods and 'text' in m.input_token_limit]
         if fallback_models:
-            selected_model = fallback_models[0] # Just grab the first compatible one
-            print(f"⚠️ Could not find preferred models. Using first available compatible model: {selected_model}")
+            selected_model_name = fallback_models[0].name # Get the .name from the model object
+            print(f"⚠️ Could not find preferred models. Using first available compatible model: {selected_model_name}")
         else:
             raise Exception("❌ No compatible text generation model found for your region/API key.")
     
-    print(f"\n✅ Using model: {selected_model}")
+    print(f"\n✅ Using model: {selected_model_name}")
 
-    model = genai.GenerativeModel(selected_model)
-    analysis_model = genai.GenerativeModel(selected_model)
+    model = genai.GenerativeModel(selected_model_name)
+    analysis_model = genai.GenerativeModel(selected_model_name)
+    # --- END FIX ---
     
 except Exception as e:
     print(f"FATAL: Could not initialize Gemini model: {e}")
